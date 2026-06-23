@@ -35,7 +35,7 @@ jobs:
 
       - name: Checkout ESP-IDF
         run: |
-          git clone --recursive --branch "$IDF_REF" https://github.com/espressif/esp-idf.git esp-idf
+          git clone --depth 1 --recursive --shallow-submodules --branch "$IDF_REF" https://github.com/espressif/esp-idf.git esp-idf
           cd esp-idf
           git submodule update --init --recursive
           git rev-parse HEAD > ../idf-commit.txt
