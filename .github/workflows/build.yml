@@ -61,6 +61,7 @@ jobs:
           
       - name: Create merged image
         run: |
+          source esp-idf/export.sh
           BUILD_DIR="esp-idf/examples/openthread/ot_rcp/build"
           cd "$BUILD_DIR"
           esptool --chip esp32c6 merge-bin \
