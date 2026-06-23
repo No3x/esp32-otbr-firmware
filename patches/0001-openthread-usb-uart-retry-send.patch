@@ -2,7 +2,7 @@ diff --git a/components/openthread/src/port/esp_openthread_uart.c b/components/o
 index 1e19af66e5..449a2b8f00 100644
 --- a/components/openthread/src/port/esp_openthread_uart.c
 +++ b/components/openthread/src/port/esp_openthread_uart.c
-@@ -56,7 +56,11 @@ otError otPlatUartSend(const uint8_t *buf, uint16_t buf_length)
+@@ -54,6 +54,10 @@ otError otPlatUartSend(const uint8_t *buf, uint16_t buf_length)
  otError otPlatUartSend(const uint8_t *buf, uint16_t buf_length)
  {
 -    int rval = write(s_uart_fd, buf, buf_length);
@@ -11,7 +11,6 @@ index 1e19af66e5..449a2b8f00 100644
 +    while (rval != (int)buf_length) {
 +        rval = write(s_uart_fd, buf, buf_length);
 +    }
+ 
      // DIG-727
  #if CONFIG_OPENTHREAD_RCP_USB_SERIAL_JTAG
-     usb_serial_jtag_ll_txfifo_flush();
- #endif
