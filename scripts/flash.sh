@@ -9,8 +9,6 @@ if ! command -v esptool.py >/dev/null 2>&1; then
   exit 1
 fi
 
-esptool.py --chip esp32c6 -p "$PORT" -b "$BAUD" \
+esptool.py --chip esp32c6 -p $PORT -b $BAUD \
   --before default_reset --after hard_reset write_flash \
-  0x0 bootloader.bin \
-  0x8000 partition-table.bin \
-  0x10000 ot_rcp.bin
+  0x0 result.bin

@@ -25,16 +25,6 @@ chmod +x flash.sh
 ./flash.sh /dev/ttyACM0
 ```
 
-Or manually:
-
-```bash
-esptool.py --chip esp32c6 -p /dev/ttyACM0 -b 460800 \
-  --before default_reset --after hard_reset write_flash \
-  0x0 bootloader.bin \
-  0x8000 partition-table.bin \
-  0x10000 ot_rcp.bin
-```
-
 After flashing, configure Home Assistant OTBR with the serial device, preferably:
 
 ```text
