@@ -79,7 +79,7 @@ jobs:
           BUILD_DIR="esp-idf/examples/openthread/ot_rcp/build"
           mkdir -p artifacts
 
-          cp "$BUILD_DIR/result.bin" artifacts/
+          cp "$BUILD_DIR/esp_ot_rcp.bin" artifacts/
               
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
