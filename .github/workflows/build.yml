@@ -14,10 +14,12 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     env:
-      IDF_REF: release/v6.0
+      IDF_REF: v6.0-beta1
       IDF_TOOLS_PATH: ${{ github.workspace }}/.espressif
       TARGET: esp32c6
+      INSTALL_TARGET: esp32-c6
       EXAMPLE_DIR: examples/openthread/ot_rcp
+
     steps:
       - name: Checkout this repository
         uses: actions/checkout@v4
@@ -35,9 +37,15 @@ jobs:
 
       - name: Checkout ESP-IDF
         run: |
-          git clone --depth 1 --recursive --shallow-submodules --branch "$IDF_REF" https://github.com/espressif/esp-idf.git esp-idf
+          git clone \
+            --depth 1 \
+            --recursive \
+            --shallow-submodules \
+            --branch "$IDF_REF" \
+            https://github.com/espressif/esp-idf.git esp-idf
+
           cd esp-idf
-          git submodule update --init --recursive
+          git submodule update --init --recursive --depth 1
           git rev-parse HEAD > ../idf-commit.txt
 
       - name: Apply USB UART retry patch
@@ -49,22 +57,34 @@ jobs:
       - name: Install ESP-IDF tools
         run: |
           cd esp-idf
-          ./install.sh "$TARGET"
+          ./install.sh "$INSTALL_TARGET"
 
-      - name: Build ot_rcp
+      - name: Build USB ot_rcp
         shell: bash
         run: |
           source esp-idf/export.sh
           cd "esp-idf/$EXAMPLE_DIR"
+
+          export LC_ALL=C.UTF-8
+          export TERM=xterm
+
           idf.py set-target "$TARGET"
+
+          echo 'CONFIG_OPENTHREAD_RCP_USB_SERIAL_JTAG=y' >> sdkconfig.defaults
+
           idf.py build
-          
+
+          grep '^CONFIG_OPENTHREAD_RCP_USB_SERIAL_JTAG=y' sdkconfig
+
       - name: Create merged image
+        shell: bash
         run: |
           source esp-idf/export.sh
-          BUILD_DIR="esp-idf/examples/openthread/ot_rcp/build"
+
+          BUILD_DIR="esp-idf/$EXAMPLE_DIR/build"
           cd "$BUILD_DIR"
-          esptool --chip esp32c6 merge-bin \
+
+          python -m esptool --chip esp32c6 merge-bin \
             --flash-mode dio \
             --flash-size 2MB \
             --flash-freq 80m \
@@ -72,15 +92,19 @@ jobs:
             0x0 bootloader/bootloader.bin \
             0x8000 partition_table/partition-table.bin \
             0x10000 esp_ot_rcp.bin
-            
+
       - name: Collect firmware artifacts
         shell: bash
         run: |
-          BUILD_DIR="esp-idf/examples/openthread/ot_rcp/build"
+          BUILD_DIR="esp-idf/$EXAMPLE_DIR/build"
           mkdir -p artifacts
 
+          cp "$BUILD_DIR/result.bin" artifacts/
           cp "$BUILD_DIR/esp_ot_rcp.bin" artifacts/
-              
+          cp "$BUILD_DIR/bootloader/bootloader.bin" artifacts/
+          cp "$BUILD_DIR/partition_table/partition-table.bin" artifacts/
+          cp idf-commit.txt artifacts/
+
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
