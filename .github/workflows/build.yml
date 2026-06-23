@@ -14,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     env:
-      IDF_REF: v6.0-beta1
+      IDF_REF: v6.0.1
       IDF_TOOLS_PATH: ${{ github.workspace }}/.espressif
       TARGET: esp32c6
       INSTALL_TARGET: esp32-c6
@@ -48,12 +48,12 @@ jobs:
           git submodule update --init --recursive --depth 1
           git rev-parse HEAD > ../idf-commit.txt
 
-      - name: Apply USB UART retry patch
-        run: |
-          cd esp-idf
-          git apply --check ../patches/0001-openthread-usb-uart-retry-send.patch
-          git apply ../patches/0001-openthread-usb-uart-retry-send.patch
-
+      #- name: Apply USB UART retry patch
+      #  run: |
+      #    cd esp-idf
+      #    git apply --check ../patches/0001-openthread-usb-uart-retry-send.patch
+      #    git apply ../patches/0001-openthread-usb-uart-retry-send.patch
+      #
       - name: Install ESP-IDF tools
         run: |
           cd esp-idf

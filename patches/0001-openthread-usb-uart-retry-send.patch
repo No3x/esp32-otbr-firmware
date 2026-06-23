@@ -1,16 +1,8 @@
 diff --git a/components/openthread/src/port/esp_openthread_uart.c b/components/openthread/src/port/esp_openthread_uart.c
-index 26c9ed13de..b2cb6a6395 100644
+index 1e19af66e5..0000000000 100644
 --- a/components/openthread/src/port/esp_openthread_uart.c
 +++ b/components/openthread/src/port/esp_openthread_uart.c
-@@ -11,7 +11,6 @@
- 
- #include <errno.h>
- #include <fcntl.h>
--#include <sys/select.h>
- 
- #include "esp_check.h"
- #include "esp_err.h"
-@@ -56,15 +55,16 @@ otError otPlatUartFlush(void)
+@@ -56,7 +56,11 @@ otError otPlatUartFlush(void)
  otError otPlatUartSend(const uint8_t *buf, uint16_t buf_length)
  {
 -    int rval = write(s_uart_fd, buf, buf_length);
@@ -22,13 +14,3 @@ index 26c9ed13de..b2cb6a6395 100644
  
      // DIG-727
  #if CONFIG_OPENTHREAD_RCP_USB_SERIAL_JTAG
-     usb_serial_jtag_ll_txfifo_flush();
- #endif
- 
-     otPlatUartSendDone();
--    if (rval != (int)buf_length) {
--        return OT_ERROR_FAILED;
--    }
-     return OT_ERROR_NONE;
- }
- #endif
