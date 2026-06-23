@@ -1,0 +1,90 @@
+name: Build ESP32-C6 OpenThread RCP
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    env:
+      IDF_REF: release/v6.0
+      IDF_TOOLS_PATH: ${{ github.workspace }}/.espressif
+      TARGET: esp32c6
+      EXAMPLE_DIR: examples/openthread/ot_rcp
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Cache ESP-IDF tools
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.IDF_TOOLS_PATH }}
+          key: esp-idf-tools-${{ runner.os }}-${{ env.IDF_REF }}-${{ env.TARGET }}
+
+      - name: Checkout ESP-IDF
+        run: |
+          git clone --recursive --branch "$IDF_REF" https://github.com/espressif/esp-idf.git esp-idf
+          cd esp-idf
+          git submodule update --init --recursive
+          git rev-parse HEAD > ../idf-commit.txt
+
+      - name: Apply USB UART retry patch
+        run: |
+          cd esp-idf
+          git apply --check ../patches/0001-openthread-usb-uart-retry-send.patch
+          git apply ../patches/0001-openthread-usb-uart-retry-send.patch
+
+      - name: Install ESP-IDF tools
+        run: |
+          cd esp-idf
+          ./install.sh "$TARGET"
+
+      - name: Build ot_rcp
+        shell: bash
+        run: |
+          source esp-idf/export.sh
+          cd "esp-idf/$EXAMPLE_DIR"
+          idf.py set-target "$TARGET"
+          idf.py build
+
+      - name: Collect firmware artifacts
+        shell: bash
+        run: |
+          OUT="$GITHUB_WORKSPACE/artifact"
+          BUILD="$GITHUB_WORKSPACE/esp-idf/$EXAMPLE_DIR/build"
+          mkdir -p "$OUT"
+          cp "$BUILD/bootloader/bootloader.bin" "$OUT/bootloader.bin"
+          cp "$BUILD/partition_table/partition-table.bin" "$OUT/partition-table.bin"
+          cp "$BUILD/ot_rcp.bin" "$OUT/ot_rcp.bin"
+          cp "$BUILD/flasher_args.json" "$OUT/flasher_args.json"
+          cp scripts/flash.sh "$OUT/flash.sh"
+          chmod +x "$OUT/flash.sh"
+          {
+            echo "ESP-IDF ref: $IDF_REF"
+            echo -n "ESP-IDF commit: "; cat "$GITHUB_WORKSPACE/idf-commit.txt"
+            echo "Target: $TARGET"
+            echo "Example: $EXAMPLE_DIR"
+            echo "Patch SHA256: $(sha256sum patches/0001-openthread-usb-uart-retry-send.patch | awk '{print $1}')"
+            echo
+            sha256sum "$OUT"/*.bin
+          } > "$OUT/build-info.txt"
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: esp32c6-ot-rcp-patched
+          path: artifact/
+          if-no-files-found: error
+          retention-days: 30
