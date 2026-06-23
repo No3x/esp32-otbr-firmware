@@ -58,25 +58,25 @@ jobs:
         run: |
             cd esp-idf
             ./install.sh "$INSTALL_TARGET"
-      
-          - name: Build USB ot_rcp
-            shell: bash
-            run: |
-              source esp-idf/export.sh
-              cd "esp-idf/$EXAMPLE_DIR"
-      
-              export LC_ALL=C.UTF-8
-              export TERM=xterm
-      
-              cat > sdkconfig.usb_rcp <<'EOF'
-              CONFIG_OPENTHREAD_RCP_USB_SERIAL_JTAG=y
-              EOF
-      
-              idf.py set-target "$TARGET"
-              idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.usb_rcp" build
-      
-              grep -n 'OPENTHREAD_RCP' sdkconfig
-              grep -n '^CONFIG_OPENTHREAD_RCP_USB_SERIAL_JTAG=y' sdkconfig
+
+      - name: Build USB ot_rcp
+        shell: bash
+        run: |
+          source esp-idf/export.sh
+          cd "esp-idf/$EXAMPLE_DIR"
+  
+          export LC_ALL=C.UTF-8
+          export TERM=xterm
+  
+          cat > sdkconfig.usb_rcp <<'EOF'
+          CONFIG_OPENTHREAD_RCP_USB_SERIAL_JTAG=y
+          EOF
+  
+          idf.py set-target "$TARGET"
+          idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.usb_rcp" build
+  
+          grep -n 'OPENTHREAD_RCP' sdkconfig
+          grep -n '^CONFIG_OPENTHREAD_RCP_USB_SERIAL_JTAG=y' sdkconfig
 
       - name: Create merged image
         shell: bash
