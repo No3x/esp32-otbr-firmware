@@ -11,6 +11,3 @@ index 1e19af66e5..449a2b8f00 100644
 +    while (rval != (int)buf_length) {
 +        rval = write(s_uart_fd, buf, buf_length);
 +    }
- #if CONFIG_OPENTHREAD_RCP_USB_SERIAL_JTAG
-     usb_serial_jtag_ll_txfifo_flush();
- #endif
