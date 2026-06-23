@@ -1,4 +1,5 @@
 diff --git a/components/openthread/src/port/esp_openthread_uart.c b/components/openthread/src/port/esp_openthread_uart.c
+index 1e19af66e5..449a2b8f00 100644
 --- a/components/openthread/src/port/esp_openthread_uart.c
 +++ b/components/openthread/src/port/esp_openthread_uart.c
 @@ -56,7 +56,11 @@ otError otPlatUartFlush(void)
