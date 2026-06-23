@@ -62,24 +62,13 @@ jobs:
       - name: Collect firmware artifacts
         shell: bash
         run: |
-          OUT="$GITHUB_WORKSPACE/artifact"
-          BUILD="$GITHUB_WORKSPACE/esp-idf/$EXAMPLE_DIR/build"
-          mkdir -p "$OUT"
-          cp "$BUILD/bootloader/bootloader.bin" "$OUT/bootloader.bin"
-          cp "$BUILD/partition_table/partition-table.bin" "$OUT/partition-table.bin"
-          cp "$BUILD/ot_rcp.bin" "$OUT/ot_rcp.bin"
-          cp "$BUILD/flasher_args.json" "$OUT/flasher_args.json"
-          cp scripts/flash.sh "$OUT/flash.sh"
-          chmod +x "$OUT/flash.sh"
-          {
-            echo "ESP-IDF ref: $IDF_REF"
-            echo -n "ESP-IDF commit: "; cat "$GITHUB_WORKSPACE/idf-commit.txt"
-            echo "Target: $TARGET"
-            echo "Example: $EXAMPLE_DIR"
-            echo "Patch SHA256: $(sha256sum patches/0001-openthread-usb-uart-retry-send.patch | awk '{print $1}')"
-            echo
-            sha256sum "$OUT"/*.bin
-          } > "$OUT/build-info.txt"
+          BUILD_DIR="esp-idf/examples/openthread/ot_rcp/build"
+          mkdir -p artifacts
+
+          cp "$BUILD_DIR/bootloader/bootloader.bin" artifacts/
+          cp "$BUILD_DIR/partition_table/partition-table.bin" artifacts/
+          cp "$BUILD_DIR/esp_ot_rcp.bin" artifacts/
+          cp "$BUILD_DIR/flash_args" artifacts/
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
