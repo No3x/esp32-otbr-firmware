@@ -2,7 +2,7 @@ diff --git a/components/openthread/src/port/esp_openthread_uart.c b/components/o
 index 1e19af66e5..449a2b8f00 100644
 --- a/components/openthread/src/port/esp_openthread_uart.c
 +++ b/components/openthread/src/port/esp_openthread_uart.c
-@@ -56,7 +56,11 @@ otError otPlatUartFlush(void)
+@@ -56,8 +56,12 @@ otError otPlatUartFlush(void)
  otError otPlatUartSend(const uint8_t *buf, uint16_t buf_length)
  {
 -    int rval = write(s_uart_fd, buf, buf_length);
