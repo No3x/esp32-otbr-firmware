@@ -58,18 +58,28 @@ jobs:
           cd "esp-idf/$EXAMPLE_DIR"
           idf.py set-target "$TARGET"
           idf.py build
-
+          
+      - name: Create merged image
+        run: |
+          BUILD_DIR="esp-idf/examples/openthread/ot_rcp/build"
+          cd "$BUILD_DIR"
+          esptool --chip esp32c6 merge-bin \
+            --flash-mode dio \
+            --flash-size 2MB \
+            --flash-freq 80m \
+            --output result.bin \
+            0x0 bootloader/bootloader.bin \
+            0x8000 partition_table/partition-table.bin \
+            0x10000 esp_ot_rcp.bin
+            
       - name: Collect firmware artifacts
         shell: bash
         run: |
           BUILD_DIR="esp-idf/examples/openthread/ot_rcp/build"
           mkdir -p artifacts
 
-          cp "$BUILD_DIR/bootloader/bootloader.bin" artifacts/
-          cp "$BUILD_DIR/partition_table/partition-table.bin" artifacts/
-          cp "$BUILD_DIR/esp_ot_rcp.bin" artifacts/
-          cp "$BUILD_DIR/flash_args" artifacts/
-
+          cp "$BUILD_DIR/result.bin" artifacts/
+              
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
