@@ -48,12 +48,12 @@ jobs:
           git submodule update --init --recursive --depth 1
           git rev-parse HEAD > ../idf-commit.txt
 
-      #- name: Apply USB UART retry patch
-      #  run: |
-      #    cd esp-idf
-      #    git apply --check ../patches/0001-openthread-usb-uart-retry-send.patch
-      #    git apply ../patches/0001-openthread-usb-uart-retry-send.patch
-      #
+      - name: Apply USB UART retry patch
+        run: |
+          cd esp-idf
+          git apply --check ../patches/0001-openthread-usb-uart-retry-send.patch
+          git apply ../patches/0001-openthread-usb-uart-retry-send.patch
+
       - name: Install ESP-IDF tools
         run: |
             cd esp-idf
