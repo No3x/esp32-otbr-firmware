@@ -74,6 +74,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: esp32c6-ot-rcp-patched
-          path: artifact/
+          path: artifacts/
           if-no-files-found: error
           retention-days: 30
