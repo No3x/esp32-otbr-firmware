@@ -22,7 +22,7 @@ Each artifact also includes the component images used to make the merged binary:
 
 ## Releases
 
-Pushing a version tag that starts with `v`, such as `v1.0.0`, builds all firmware variants and publishes a GitHub Release. The release includes the merged firmware images, component images for each board, ESP-IDF commit records, and `SHA256SUMS.txt` checksums. Re-running the workflow for an existing tag updates the release assets in place.
+Pushing a version tag that starts with `v`, such as `v1.0.0`, builds all firmware variants and publishes a GitHub Release. The release includes the merged firmware images, component images for each board, ESP-IDF commit records, and `SHA256SUMS.txt` checksums.
 
 ## Flash
 
