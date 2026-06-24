@@ -1,4 +1,4 @@
-name: Build ESP32-C6 OpenThread RCP
+name: Build ESP32 OpenThread RCP firmware
 
 on:
   workflow_dispatch:
@@ -12,12 +12,39 @@ permissions:
 
 jobs:
   build:
+    name: Build ${{ matrix.firmware }}
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - firmware: generic-esp32c5.bin
+            target: esp32c5
+            install_target: esp32c5
+            chip: esp32c5
+            xiao_external_antenna: false
+          - firmware: generic-esp32c6.bin
+            target: esp32c6
+            install_target: esp32c6
+            chip: esp32c6
+            xiao_external_antenna: false
+          - firmware: generic-esp32h2.bin
+            target: esp32h2
+            install_target: esp32h2
+            chip: esp32h2
+            xiao_external_antenna: false
+          - firmware: xiao-esp32c6-external-antenna.bin
+            target: esp32c6
+            install_target: esp32c6
+            chip: esp32c6
+            xiao_external_antenna: true
     env:
       IDF_REF: v6.0.1
       IDF_TOOLS_PATH: ${{ github.workspace }}/.espressif
-      TARGET: esp32c6
-      INSTALL_TARGET: esp32-c6
+      TARGET: ${{ matrix.target }}
+      INSTALL_TARGET: ${{ matrix.install_target }}
+      CHIP: ${{ matrix.chip }}
+      FIRMWARE: ${{ matrix.firmware }}
       EXAMPLE_DIR: examples/openthread/ot_rcp
 
     steps:
@@ -54,27 +81,44 @@ jobs:
           git apply --check ../patches/0001-openthread-usb-uart-retry-send.patch
           git apply ../patches/0001-openthread-usb-uart-retry-send.patch
 
+      - name: Configure XIAO ESP32-C6 external antenna
+        if: ${{ matrix.xiao_external_antenna }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('esp-idf/examples/openthread/ot_rcp/main/esp_ot_rcp.c')
+          text = path.read_text()
+          text = text.replace('#include "esp_vfs_eventfd.h"\n', '#include "esp_vfs_eventfd.h"\n#include "driver/gpio.h"\n#include "freertos/FreeRTOS.h"\n#include "freertos/task.h"\n')
+          marker = '#define TAG "ot_esp_rcp"\n'
+          helper = '''#define TAG "ot_esp_rcp"\n\nstatic void xiao_select_external_antenna(void)\n{\n    gpio_set_direction(GPIO_NUM_3, GPIO_MODE_OUTPUT);\n    gpio_set_level(GPIO_NUM_3, 0);\n    vTaskDelay(pdMS_TO_TICKS(100));\n    gpio_set_direction(GPIO_NUM_14, GPIO_MODE_OUTPUT);\n    gpio_set_level(GPIO_NUM_14, 1);\n}\n'''
+          text = text.replace(marker, helper)
+          text = text.replace('void app_main(void)\n{\n', 'void app_main(void)\n{\n    xiao_select_external_antenna();\n\n')
+          path.write_text(text)
+          PY
+
       - name: Install ESP-IDF tools
         run: |
-            cd esp-idf
-            ./install.sh "$INSTALL_TARGET"
+          cd esp-idf
+          ./install.sh "$INSTALL_TARGET"
 
       - name: Build USB ot_rcp
         shell: bash
         run: |
           source esp-idf/export.sh
           cd "esp-idf/$EXAMPLE_DIR"
-  
+
           export LC_ALL=C.UTF-8
           export TERM=xterm
-  
-          cat > sdkconfig.usb_rcp <<'EOF'
+
+          cat > sdkconfig.usb_rcp <<'EOF_CONFIG'
           CONFIG_OPENTHREAD_RCP_USB_SERIAL_JTAG=y
-          EOF
-  
+          EOF_CONFIG
+
           idf.py set-target "$TARGET"
           idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.usb_rcp" build
-  
+
           grep -n 'OPENTHREAD_RCP' sdkconfig
           grep -n '^CONFIG_OPENTHREAD_RCP_USB_SERIAL_JTAG=y' sdkconfig
 
@@ -86,7 +130,7 @@ jobs:
           BUILD_DIR="esp-idf/$EXAMPLE_DIR/build"
           cd "$BUILD_DIR"
 
-          python -m esptool --chip esp32c6 merge-bin \
+          python -m esptool --chip "$CHIP" merge-bin \
             --flash-mode dio \
             --flash-size 2MB \
             --flash-freq 80m \
@@ -101,7 +145,7 @@ jobs:
           BUILD_DIR="esp-idf/$EXAMPLE_DIR/build"
           mkdir -p artifacts
 
-          cp "$BUILD_DIR/result.bin" artifacts/
+          cp "$BUILD_DIR/result.bin" "artifacts/$FIRMWARE"
           cp "$BUILD_DIR/esp_ot_rcp.bin" artifacts/
           cp "$BUILD_DIR/bootloader/bootloader.bin" artifacts/
           cp "$BUILD_DIR/partition_table/partition-table.bin" artifacts/
@@ -110,7 +154,7 @@ jobs:
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
-          name: esp32c6-ot-rcp-patched
+          name: ${{ matrix.firmware }}
           path: artifacts/
           if-no-files-found: error
           retention-days: 30
