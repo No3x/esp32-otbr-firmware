@@ -205,11 +205,18 @@ jobs:
           (cd release && sha256sum * > SHA256SUMS.txt)
           find release -maxdepth 1 -type f -print | sort
 
-      - name: Create GitHub release
+      - name: Create a GitHub release
+        uses: softprops/action-gh-release@v2
+        id: create_release
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "${{ github.ref_name }}" release/* \
-            --repo "${{ github.repository }}" \
-            --title "${{ github.ref_name }}" \
-            --generate-notes
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          overwrite_files: true
+          files: |
+            release/*
