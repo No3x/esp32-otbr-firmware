@@ -22,21 +22,25 @@ jobs:
             target: esp32c5
             install_target: esp32c5
             chip: esp32c5
+            flash_freq: 80m
             xiao_external_antenna: false
           - firmware: generic-esp32c6.bin
             target: esp32c6
             install_target: esp32c6
             chip: esp32c6
+            flash_freq: 80m
             xiao_external_antenna: false
           - firmware: generic-esp32h2.bin
             target: esp32h2
             install_target: esp32h2
             chip: esp32h2
+            flash_freq: 48m
             xiao_external_antenna: false
           - firmware: xiao-esp32c6-external-antenna.bin
             target: esp32c6
             install_target: esp32c6
             chip: esp32c6
+            flash_freq: 80m
             xiao_external_antenna: true
     env:
       IDF_REF: v6.0.1
@@ -44,6 +48,7 @@ jobs:
       TARGET: ${{ matrix.target }}
       INSTALL_TARGET: ${{ matrix.install_target }}
       CHIP: ${{ matrix.chip }}
+      FLASH_FREQ: ${{ matrix.flash_freq }}
       FIRMWARE: ${{ matrix.firmware }}
       EXAMPLE_DIR: examples/openthread/ot_rcp
 
@@ -133,7 +138,7 @@ jobs:
           python -m esptool --chip "$CHIP" merge-bin \
             --flash-mode dio \
             --flash-size 2MB \
-            --flash-freq 80m \
+            --flash-freq "$FLASH_FREQ" \
             --output result.bin \
             0x0 bootloader/bootloader.bin \
             0x8000 partition_table/partition-table.bin \
