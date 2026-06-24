@@ -1,28 +1,32 @@
-# ESP32-C6 OpenThread RCP firmware with USB UART retry patch
+# ESP32 OpenThread RCP firmware with USB UART retry patch
 
-Builds reproducible-ish ESP32-C6 OpenThread RCP firmware for Home Assistant OTBR.
+Builds reproducible-ish ESP32-C5, ESP32-C6, and ESP32-H2 OpenThread RCP firmware for Home Assistant OTBR.
 
-This is **not ESPHome firmware**. The ESP32-C6 becomes an OpenThread RCP radio used by the Home Assistant OpenThread Border Router add-on.
+This is **not ESPHome firmware**. The ESP32 becomes an OpenThread RCP radio used by the Home Assistant OpenThread Border Router add-on.
 
 ## What it builds
 
-GitHub Actions builds the ESP-IDF `examples/openthread/ot_rcp` example for `esp32c6`, applies the USB UART retry patch, and uploads:
+GitHub Actions builds the ESP-IDF `examples/openthread/ot_rcp` example as a matrix, applies the USB UART retry patch, and uploads a merged image for each target:
+
+- `generic-esp32c5.bin`
+- `generic-esp32c6.bin`
+- `generic-esp32h2.bin`
+- `xiao-esp32c6-external-antenna.bin`
+
+Each artifact also includes the component images used to make the merged binary:
 
 - `bootloader.bin`
 - `partition-table.bin`
-- `ot_rcp.bin`
-- `flasher_args.json`
-- `flash.sh`
-- `build-info.txt`
+- `esp_ot_rcp.bin`
+- `idf-commit.txt`
 
 ## Flash
 
-Download the workflow artifact, unzip it, then:
+Download the workflow artifact for your board and flash the merged `.bin` with a browser-based tool such as [ESPHome Web](https://web.esphome.io/), or unzip the artifact and use `esptool`:
 
 ```bash
 pip install esptool
-chmod +x flash.sh
-./flash.sh /dev/ttyACM0
+esptool.py --chip auto write-flash 0x0 generic-esp32c6.bin
 ```
 
 After flashing, configure Home Assistant OTBR with the serial device, preferably:
