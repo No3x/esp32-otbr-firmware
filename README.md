@@ -20,9 +20,13 @@ Each artifact also includes the component images used to make the merged binary:
 - `esp_ot_rcp.bin`
 - `idf-commit.txt`
 
+## Releases
+
+Pushing a version tag that starts with `v`, such as `v1.0.0`, builds all firmware variants and publishes a GitHub Release. The release includes the merged firmware images, component images for each board, ESP-IDF commit records, and `SHA256SUMS.txt` checksums.
+
 ## Flash
 
-Download the workflow artifact for your board and flash the merged `.bin` with a browser-based tool such as [ESPHome Web](https://web.esphome.io/), or unzip the artifact and use `esptool`:
+Download the firmware image for your board from the latest GitHub Release or workflow artifact, then flash the merged `.bin` with a browser-based tool such as [ESPHome Web](https://web.esphome.io/), or unzip the artifact and use `esptool`:
 
 ```bash
 pip install esptool
