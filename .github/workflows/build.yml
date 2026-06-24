@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main ]
 
@@ -164,3 +166,57 @@ jobs:
           path: artifacts/
           if-no-files-found: error
           retention-days: 30
+
+  release:
+    name: Publish GitHub release
+    needs: build
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download firmware artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Prepare release assets
+        shell: bash
+        run: |
+          mkdir -p release
+
+          find release-assets -type f -name '*.bin' -print0 | while IFS= read -r -d '' file; do
+            artifact="$(basename "$(dirname "$file")")"
+            filename="$(basename "$file")"
+
+            if [[ "$filename" == "$artifact" ]]; then
+              cp "$file" "release/$filename"
+            else
+              cp "$file" "release/${artifact}-${filename}"
+            fi
+          done
+
+          find release-assets -type f -name 'idf-commit.txt' -print0 | while IFS= read -r -d '' file; do
+            artifact="$(basename "$(dirname "$file")")"
+            cp "$file" "release/${artifact}-idf-commit.txt"
+          done
+
+          (cd release && sha256sum * > SHA256SUMS.txt)
+          find release -maxdepth 1 -type f -print | sort
+
+      - name: Create a GitHub release
+        uses: softprops/action-gh-release@v2
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          overwrite_files: true
+          files: |
+            release/*
